@@ -1,8 +1,8 @@
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from . import crud, models, schemas
-from .database import SessionLocal, engine
+import crud, models, schemas
+from database import SessionLocal, engine
 from sqlalchemy.orm import Session
 #from sqlalchemy.sql.expression import null
 
@@ -29,7 +29,7 @@ models.Base.metadata.create_all(engine)
 
 @app.post('/api/v1/vehicles/', response_model=schemas.VehicleBM, tags=["Vehicles"])
 def create_vehicle(veh: schemas.VehicleBM, db: Session = Depends(get_db)):
-    db_vehicle = create_vehicle(db, schemas.veh)
+    db_vehicle = crud.create_vehicle(db, veh)
     return db_vehicle
 
 @app.get('/api/v1/vehicles/', response_model=List[schemas.VehicleIDBM], tags=["Vehicles"])
@@ -38,7 +38,7 @@ def get_vehicles(db: Session = Depends(get_db)):
 
 @app.get('/api/v1/vehicles/{vehicle_id}', tags=["Vehicles"])
 def get_vehicle(vehicle_id: str, db: Session = Depends(get_db)):
-    return get_vehicle(db, vehicle_id)
+    return crud.get_vehicle(db, vehicle_id)
 
 @app.delete("/api/v1/vehicles/{vehicle_id}", tags=["Vehicles"])
 def del_vehicle(vehicle_id: str, db: Session = Depends(get_db)):
@@ -46,14 +46,14 @@ def del_vehicle(vehicle_id: str, db: Session = Depends(get_db)):
     return {"vehicle_deleted": deleted}
 
 @app.put("/api/v1/vehicles/{vehicle_id}", response_model=schemas.VehicleBM, tags=["Vehicles"])
-def upd_vehicle(vehicle_id: str, veh: schemas.VehicleBM, db: Session = Depends(get_db)):
+def upd_vehicle(vehicle_id: str, veh: schemas.VehicleRequest, db: Session = Depends(get_db)):
+    veh.dict(exclude_unset=True)
     veh_update = crud.update_vehicle(db, vehicle_id, veh)
     return veh_update
 
-@app.post('/api/v1/vehicleModels/', response_model=schemas.VehicleModelBM, tags=["Vehicle Models"])
+@app.post('/api/v1/vehicleModels/', response_model=schemas.VehicleModelIDBM, tags=["Vehicle Models"])
 def create_vehicle_model(veh: schemas.VehicleModelBM, db: Session = Depends(get_db)):
-    db_vehicle_model = create_vehicle_model(db, veh)
-    return db_vehicle_model
+    return crud.create_vehicle_model(db, veh)
 
 @app.get('/api/v1/vehicleModels/', response_model=List[schemas.VehicleModelIDBM], tags=["Vehicle Models"])
 def get_vehicle_models(db: Session = Depends(get_db)):
@@ -61,18 +61,15 @@ def get_vehicle_models(db: Session = Depends(get_db)):
 
 @app.get('/api/v1/vehicleModels/{model_id}', tags=["Vehicle Models"])
 def get_vehicle_model(model_id: int, db: Session = Depends(get_db)):
-    return get_vehicle_model(db, model_id)
+    return crud.get_vehicle_model(db, model_id)
 
 @app.delete("/api/v1/vehicleModels/{model_id}", tags=["Vehicle Models"])
 def del_vehicle_model(model_id: int, db: Session = Depends(get_db)):
-    deleted = crud.delete_vehicle_model(db, model_id)
-    return {"vehicle_model_deleted": deleted}
+    return {"vehicle_model_deleted": crud.delete_vehicle_model(db, model_id)}
 
 @app.put("/api/v1/vehicleModels/{model_id}", response_model=schemas.VehicleModelBM, tags=["Vehicle Models"])
-def upd_vehicle_model(model_id: int, veh: schemas.VehicleModelBM, db: Session = Depends(get_db)):
+def upd_vehicle_model(model_id: int, veh: schemas.VehicleModelRequest, db: Session = Depends(get_db)):
+    veh.dict(exclude_unset=True)
     veh_update = crud.update_vehicle_model(db, model_id, veh)
-    if (veh_update == "invalid vehicle type"):
-        raise HTTPException(status_code=422, detail=veh_update)
-    else:
-        return veh_update
+    return veh_update
 

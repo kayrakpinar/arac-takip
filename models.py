@@ -2,7 +2,7 @@ from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from sqlalchemy import Boolean, Column, String, Integer, delete, ForeignKey
 from sqlalchemy.orm import relationship
-from .database import Base
+from database import Base
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -19,7 +19,7 @@ class Vehicle(Base):
 class VehicleModel(Base):
    __tablename__ = 'VehicleModel'
    model_id = Column(Integer, primary_key=True)
-   model_name = Column(String)
-   year = Column(Integer)
-   vehicle_type = Column(String)
+   model_name = Column(String, nullable=False)
+   year = Column(Integer, nullable=False)
+   vehicle_type = Column(String, nullable=False)
    vehmodel = relationship("Vehicle", back_populates="veh", cascade="all, delete, delete-orphan")
